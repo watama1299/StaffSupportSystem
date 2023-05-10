@@ -42,11 +42,6 @@ public class ProductMonitor {
      * @param cls
      */
     public void removeItemsFromUnavailability(Collection<Item> cls) {
-//        for (Item x : cls) {
-//            if (withdrawn.remove(x))
-//                available.add(x);
-//        }
-
         // acquire writelock for withdrawn
         writeWL.lock();
         try {
@@ -76,15 +71,6 @@ public class ProductMonitor {
      * @return
      */
     public Optional<Item> getAvailableItem() {
-//        Optional<Item> o = Optional.empty();
-//        if (!available.isEmpty()) {
-//            var obj = available.remove();
-//            if (obj != null) {
-//                o = Optional.of(obj);
-//                withdrawn.add(o.get());
-//            }
-//        }
-//        return o;
         Optional<Item> o = Optional.empty();
         // acquire writelock to modify available in the future
         writeAL.lock();
@@ -148,9 +134,6 @@ public class ProductMonitor {
      * @return
      */
     public Set<String> getAvailableItems() {
-//        Set<String> s;
-//        s = available.stream().map(x -> x.productName).collect(Collectors.toSet());
-//        return s;
         Set<String> s;
         readAL.lock();
         try {
@@ -189,16 +172,6 @@ public class ProductMonitor {
                                  List<Item> toIterate,
                                  List<Item> currentlyPurchasable,
                                  List<Item> currentlyUnavailable) {
-//        double total_cost = 0.0;
-//        for (var x : toIterate) {
-//            if (withdrawn.contains(x)) {
-//                currentlyPurchasable.add(x);
-//                total_cost += aDouble;
-//            } else {
-//                currentlyUnavailable.add(x);
-//            }
-//        }
-//        return total_cost;
         double total_cost = 0.0;
         writeWL.lock();
         try {
@@ -250,13 +223,6 @@ public class ProductMonitor {
      * @return
      */
     public boolean completelyRemove(List<Item> toIterate) {
-//        boolean allEmpty;
-//        for (var x : toIterate) {
-//            withdrawn.remove(x);
-//            available.remove(x);
-//        }
-//        allEmpty = withdrawn.isEmpty() && available.isEmpty();
-//        return allEmpty;
         boolean allEmpty;
         // acquire writelock for both available and withdrawn
         writeAL.lock(); writeWL.lock();
