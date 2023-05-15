@@ -10,30 +10,81 @@ import java.util.stream.Collectors;
 /**
  * Keeps track of item based on the name. Items of the same name differentiated by unique UUID.
  * Each item with unique UUID is a unique entry inside available and withdrawn.
+ *
  */
 public class ProductMonitor {
     Queue<Item> available;
     Queue<Item> withdrawn;
 
     /**
-     * IMPLEMENT A LOCKING SYSTEM HERE
+     * MONITOR IMPLEMENTATION
      */
-    ReadWriteLock availableLock, withdrawnLock;
-    Lock readAL, writeAL, readWL, writeWL;
+    ReentrantLock monitor;
+    Condition readOk, writeOk;
+    private int numReader, numWriter, waitingWriter;
+
+
 
     public ProductMonitor() {
         available = new LinkedList<>();
         withdrawn = new LinkedList<>();
 
-        // locks for available
-        availableLock = new ReentrantReadWriteLock(true);
-        readAL = availableLock.readLock();
-        writeAL = availableLock.writeLock();
+        // monitor locking implementation
+        monitor = new ReentrantLock(true);
+        readOk = monitor.newCondition();
+        writeOk = monitor.newCondition();
+        numReader = numWriter = waitingWriter = 0;
+    }
 
-        // locks for withdrawn
-        withdrawnLock = new ReentrantReadWriteLock(true);
-        readWL = withdrawnLock.readLock();
-        writeWL = withdrawnLock.writeLock();
+    public void sLock() {
+        monitor.lock();
+
+        while (numWriter > 0 || waitingWriter > 0)
+            try {
+                readOk.await();
+            } catch (Exception e) {}
+
+        numReader++;
+        readOk.signal();
+        monitor.unlock();
+    }
+
+    public void sUnlock() {
+        monitor.lock();
+
+        numReader--;
+
+        if (numReader == 0)
+            writeOk.signal();
+
+        monitor.unlock();
+    }
+
+    public void xLock() {
+        monitor.lock();
+
+        if (numWriter > 0 || numReader > 0)
+            try {
+                waitingWriter++;
+                writeOk.await();
+                waitingWriter--;
+            } catch (Exception e) {}
+
+        numWriter++;
+
+        monitor.unlock();
+    }
+
+    public void xUnlock() {
+        monitor.lock();
+
+        numWriter--;
+        readOk.signal();
+
+        if (numReader == 0)
+            writeOk.signal();
+
+        monitor.unlock();
     }
 
     /**
@@ -42,25 +93,12 @@ public class ProductMonitor {
      * @param cls
      */
     public void removeItemsFromUnavailability(Collection<Item> cls) {
-        // acquire writelock for withdrawn
-        writeWL.lock();
-        try {
-            for (Item x : cls) {
-                if (withdrawn.remove(x)) {
-                    // acquire writelock for available
-                    writeAL.lock();
-                    try {
-                        available.add(x);
-                    } finally {
-                        // unlock writelock for available
-                        writeAL.unlock();
-                    }
-                }
-            }
-        } finally {
-            // unlock writelock for withdrawn
-            writeWL.unlock();
+        xLock();
+        for (Item x : cls) {
+            if (withdrawn.remove(x))
+                available.add(x);
         }
+        xUnlock();
     }
 
     /**
@@ -72,26 +110,15 @@ public class ProductMonitor {
      */
     public Optional<Item> getAvailableItem() {
         Optional<Item> o = Optional.empty();
-        // acquire writelock to modify available in the future
-        writeAL.lock();
-        try {
-            if (!available.isEmpty()) {
-                var obj = available.remove();
-                if (obj != null) {
-                    o = Optional.of(obj);
-                    // acquire writelock for withdrawn
-                    writeWL.lock();
-                    try {
-                        withdrawn.add(o.get());
-                    } finally {
-                        // unlock writelock for withdrawn
-                        writeWL.unlock();
-                    }
-                }
+        xLock();
+        if (!available.isEmpty()) {
+            var obj = available.remove();
+            if (obj != null) {
+                o = Optional.of(obj);
+                withdrawn.add(o.get());
             }
-        } finally {
-            writeAL.unlock();
         }
+        xUnlock();
         return o;
     }
 
@@ -105,24 +132,12 @@ public class ProductMonitor {
      */
     public boolean doShelf(Item u) {
         boolean result = false;
-        // acquire writelock for withdrawn
-        writeWL.lock();
-        try {
-            if (withdrawn.remove(u)) {
-                // acquire writelock for available
-                writeAL.lock();
-                try {
-                    available.add(u);
-                    result = true;
-                } finally {
-                    // unlock writelock for available
-                    writeAL.unlock();
-                }
-            }
-        } finally {
-            // unlock writelock for withdrawn
-            writeWL.unlock();
+        xLock();
+        if (withdrawn.remove(u)) {
+            available.add(u);
+            result = true;
         }
+        xUnlock();
         return result;
     }
 
@@ -134,13 +149,10 @@ public class ProductMonitor {
      * @return
      */
     public Set<String> getAvailableItems() {
+        sLock();
         Set<String> s;
-        readAL.lock();
-        try {
-            s = available.stream().map(x -> x.productName).collect(Collectors.toSet());
-        } finally {
-            readAL.unlock();
-        }
+        s = available.stream().map(x -> x.productName).collect(Collectors.toSet());
+        sUnlock();
         return s;
     }
 
@@ -150,13 +162,9 @@ public class ProductMonitor {
      * @param x
      */
     public void addAvailableProduct(Item x) {
-        //
-        writeAL.lock();
-        try {
-            available.add(x);
-        } finally {
-            writeAL.unlock();
-        }
+        xLock();
+        available.add(x);
+        xUnlock();
     }
 
     /**
@@ -173,19 +181,16 @@ public class ProductMonitor {
                                  List<Item> currentlyPurchasable,
                                  List<Item> currentlyUnavailable) {
         double total_cost = 0.0;
-        writeWL.lock();
-        try {
-            for (var x : toIterate) {
-                if (withdrawn.contains(x)) {
-                    currentlyPurchasable.add(x);
-                    total_cost += aDouble;
-                } else {
-                    currentlyUnavailable.add(x);
-                }
+        xLock();
+        for (var x : toIterate) {
+            if (withdrawn.contains(x)) {
+                currentlyPurchasable.add(x);
+                total_cost += aDouble;
+            } else {
+                currentlyUnavailable.add(x);
             }
-        } finally {
-            writeWL.unlock();
         }
+        xUnlock();
         return total_cost;
     }
 
@@ -195,25 +200,13 @@ public class ProductMonitor {
      * @param toIterate
      */
     public void makeAvailable(List<Item> toIterate) {
-        // acquire writelock for withdrawn
-        writeWL.lock();
-        try {
-            for (var x : toIterate) {
-                if (withdrawn.remove(x)) {
-                    // acquire writelock for available
-                    writeAL.lock();
-                    try {
-                        available.add(x);
-                    } finally {
-                        // unlock writelock for available
-                        writeAL.unlock();
-                    }
-                }
+        xLock();
+        for (var x : toIterate) {
+            if (withdrawn.remove(x)) {
+                available.add(x);
             }
-        } finally {
-            // unlock writelock for withdrawn
-            writeWL.unlock();
         }
+        xUnlock();
     }
 
     /**
@@ -224,17 +217,13 @@ public class ProductMonitor {
      */
     public boolean completelyRemove(List<Item> toIterate) {
         boolean allEmpty;
-        // acquire writelock for both available and withdrawn
-        writeAL.lock(); writeWL.lock();
-        try {
-            for (var x : toIterate) {
-                withdrawn.remove(x);
-                available.remove(x);
-            }
-            allEmpty = withdrawn.isEmpty() && available.isEmpty();
-        } finally {
-            writeAL.unlock(); writeWL.unlock();
+        xLock();
+        for (var x : toIterate) {
+            withdrawn.remove(x);
+            available.remove(x);
         }
+        allEmpty = withdrawn.isEmpty() && available.isEmpty();
+        xUnlock();
         return allEmpty;
     }
 }

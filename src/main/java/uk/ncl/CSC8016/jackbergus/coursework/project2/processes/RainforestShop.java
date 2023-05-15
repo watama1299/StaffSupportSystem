@@ -15,17 +15,44 @@ public class RainforestShop {
 
     /// For correctly implementing the server, pelase consider that
 
+    /**
+     * Boolean to keep track of pessimistic or optimistic transaction
+     */
     private final boolean isGlobalLock;
+
+    /**
+     * Boolean to keep track of whether supplier is running or has stopped
+     */
     private boolean supplierStopped;
+
+    /**
+     * A set of String to keep track of clients that are allowed to perform transaction
+     */
     private Set<String> allowed_clients;
+
+    /**
+     * Maps the user unique IDs (UUID object) with their names (String object)
+     */
     public HashMap<UUID, String> UUID_to_user;
+
+    /**
+     * Maps the product name (String object) with its ProductMonitor counterpart
+     */
     private volatile HashMap<String, ProductMonitor> available_withdrawn_products;
+
+    /**
+     * Maps the product name (String object) with its item price (Double object)
+     */
     private HashMap<String, Double> productWithCost = new HashMap<>();
+
+    /**
+     * Queue that keeps track of product names that has been purchased and needs to be restocked
+     */
     private volatile Queue<String> currentEmptyItem;
 
 
     public boolean isGlobalLock() {
-        return true;
+        return isGlobalLock;
     }
 
     /**
@@ -151,8 +178,10 @@ public class RainforestShop {
         List<String> ls = Collections.emptyList();
         // TODO: Implement the remaining part!
 
+        if (!this.equals(transaction.getSelf())) return ls;
+
         // check ProductMonitor for each item to see if !available.isEmpty()
-        for (Map.Entry<String, ProductMonitor> item : available_withdrawn_products.entrySet()) {
+        for (Map.Entry<String, ProductMonitor> item : transaction.getSelf().available_withdrawn_products.entrySet()) {
             //if (!item.getValue().available.isEmpty()) ls.add(item.getKey());
             ls.addAll(item.getValue().getAvailableItems());
         }
@@ -221,10 +250,13 @@ public class RainforestShop {
     public void stopSupplier() {
         // TODO: Provide a correct concurrent implementation!
         currentEmptyItem.add("@stop!");
+
+
     }
 
     /**
-     * The supplier acknowledges that it was stopped, and updates its internal state. The monitor also receives confirmation
+     * The supplier acknowledges that it was stopped, and updates its internal state.
+     * The monitor also receives confirmation
      * @param stopped   Boolean variable from the supplier
      */
     public void supplierStopped(AtomicBoolean stopped) {
@@ -270,17 +302,34 @@ public class RainforestShop {
      */
     public BasketResult basketCheckout(Transaction transaction, double total_available_money) {
         // Note: this part of the implementation is completely correct!
+
+        // initialise result of checkout
         BasketResult result = null;
+
+        // make sure user in transaction is an existing user in the rainforestshop user base
         if (UUID_to_user.getOrDefault(transaction.getUuid(), "").equals(transaction.getUsername())) {
+
+            // get list of items from user's basket
             var b = transaction.getUnmutableBasket();
+
+
             double total_cost = (0.0);
             List<Item> currentlyPurchasable = new ArrayList<>();
             List<Item> currentlyUnavailable = new ArrayList<>();
+
+            // loop through the user's list of items
+            // groups products of same name together via map -> key: product name, value: list of items with same name
+            // sum up the total cost of all the items in the user's basket
+            // while populating the arrays of items currentlypurchasable and currentunavailable
             for (Map.Entry<String, List<Item>> entry : b.stream().collect(Collectors.groupingBy(x -> x.productName)).entrySet()) {
                 String k = entry.getKey();
                 List<Item> v = entry.getValue();
                 total_cost += available_withdrawn_products.get(k).updatePurchase(productWithCost.get(k), v, currentlyPurchasable, currentlyUnavailable);
             }
+
+            // if the user doesn't have enough money to buy all the items
+            // 1) make all the items in the user's basket become available again for all users
+            // 2) clear out the temporary arraylists
             if ((total_cost > total_available_money)) {
                 for (Map.Entry<String, List<Item>> entry : b.stream().collect(Collectors.groupingBy(x -> x.productName)).entrySet()) {
                     String k = entry.getKey();
@@ -290,7 +339,14 @@ public class RainforestShop {
                 currentlyUnavailable.clear();
                 currentlyPurchasable.clear();
                 total_cost = (0.0);
-            } else {
+            }
+
+            // if the user has enough money to buy all the items
+            // 1) complete the purchase and remove the items
+            // 2) if a product has been completely purchased off the shelf, put product name to Set s
+            // 3) put all product names in s into currentEmptyItem
+            else
+            {
                 Set<String> s = new HashSet<>();
                 for (Map.Entry<String, List<Item>> entry : b.stream().collect(Collectors.groupingBy(x -> x.productName)).entrySet()) {
                     String k = entry.getKey();
@@ -300,7 +356,9 @@ public class RainforestShop {
                 }
                 currentEmptyItem.addAll(s);
             }
-            result = new BasketResult(currentlyPurchasable, currentlyUnavailable, total_available_money, total_cost, total_available_money- total_cost);
+
+            // saves the summary of the checkout into result
+            result = new BasketResult(currentlyPurchasable, currentlyUnavailable, total_available_money, total_cost, total_available_money - total_cost);
         }
         return result;
     }
