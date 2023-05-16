@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="599c20b3-89b2-41c4-82f3-35ccac701927" name="Changes" comment="Progress update 15/05/2023">
+      <change beforePath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/ProductMonitor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/ProductMonitor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/RainforestShop.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/RainforestShop.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager" show_ignored="true">
+    <option name="groupingKeys">
+      <option value="directory" />
+      <option value="module" />
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="useMavenConfig" value="true" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectId" id="2P1AY0tUMmgNOQPJQH2meUgLymB" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "jdk.selected.JAVA_MODULE": "openjdk-19",
+    "last_opened_file_path": "D:/Documents/PG - Comp Sci/Sem 2/03 - Adv Programming/Coursework/NCL_CSC8016-main/pom.xml",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "run.code.analysis.last.selected.profile": "pProject Default",
+    "settings.editor.selected.configurable": "MavenSettings"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="uk.ncl.CSC8016.jackbergus.coursework.project2.processes" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="Testing" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="ALTERNATIVE_JRE_PATH" value="openjdk-19" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+      <option name="MAIN_CLASS_NAME" value="uk.ncl.CSC8016.jackbergus.coursework.project2.testing.Testing" />
+      <module name="NCL_CSC8016-main" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="uk.ncl.CSC8016.jackbergus.coursework.project2.testing.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.Testing" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="599c20b3-89b2-41c4-82f3-35ccac701927" name="Changes" comment="" />
+      <created>1682614257734</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1682614257734</updated>
+    </task>
+    <task id="LOCAL-00001" summary="Putting coursework progress on GitHub">
+      <created>1683572454903</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1683572454903</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Remove unnecessary commented code">
+      <created>1683687772525</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1683687772525</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Progress update 15/05/2023">
+      <created>1684177315584</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1684177315584</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Putting coursework progress on GitHub" />
+    <MESSAGE value="Remove unnecessary commented code" />
+    <MESSAGE value="Progress update 15/05/2023" />
+    <option name="LAST_COMMIT_MESSAGE" value="Progress update 15/05/2023" />
+  </component>
+</project>

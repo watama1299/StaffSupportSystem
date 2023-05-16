@@ -16,15 +16,15 @@ public class ProductMonitor {
     Queue<Item> available;
     Queue<Item> withdrawn;
 
-    /**
-     * MONITOR IMPLEMENTATION
-     */
+
     ReentrantLock monitor;
     Condition readOk, writeOk;
     private int numReader, numWriter, waitingWriter;
 
 
-
+    /**
+     * Fair monitor implementation, taken from lecture slide 05-Monitors
+     */
     public ProductMonitor() {
         available = new LinkedList<>();
         withdrawn = new LinkedList<>();
@@ -36,54 +36,86 @@ public class ProductMonitor {
         numReader = numWriter = waitingWriter = 0;
     }
 
+    /**
+     * Shared lock locking implementation, taken from lecture slide 05-Monitors
+     */
     public void sLock() {
+        // obtain monitor lock
         monitor.lock();
 
+        // check if there are any existing writers in process or waiting
+        // if there are, put thread to sleep and wait until no more writers in process or waiting
         while (numWriter > 0 || waitingWriter > 0)
             try {
                 readOk.await();
             } catch (Exception e) {}
 
+        // add one to the number of readers currently in process
         numReader++;
+        // signal to other readers to awake and begin process
         readOk.signal();
+        // unlock monitor lock
         monitor.unlock();
     }
 
+    /**
+     * Shared lock unlocking implementation, taken from lecture slide 05-Monitors
+     */
     public void sUnlock() {
+        // obtain monitor lock
         monitor.lock();
 
+        // decrease readers count
         numReader--;
 
+        // if there are no more readers, then wake any writer threads waiting
         if (numReader == 0)
             writeOk.signal();
 
+        // unlock monitor lock
         monitor.unlock();
     }
 
+    /**
+     * Exclusive lock locking implementation, taken from lecture slide 05-Monitors
+     */
     public void xLock() {
+        // obtain monitor lock
         monitor.lock();
 
+        // if there are currently any active writers or any active reader
+        // add to waiting writer counter and go to sleep
+        // once awaken, reduce waiting writer counter and add to writer counter
         if (numWriter > 0 || numReader > 0)
             try {
                 waitingWriter++;
                 writeOk.await();
                 waitingWriter--;
             } catch (Exception e) {}
-
         numWriter++;
 
+        // unlock monitor lock
         monitor.unlock();
     }
 
+    /**
+     * Exclusive lock unlocking implementation, taken from lecture slide 05-Monitors
+     */
     public void xUnlock() {
+        // obtain monitor lock
         monitor.lock();
 
+        // decrease writer counter
         numWriter--;
+        // assumes that there will only be a single writer
+        // awake any sleeping reader threads
         readOk.signal();
 
+        // if there are no readers, then awake any sleeping writer threads
         if (numReader == 0)
             writeOk.signal();
 
+        // unlock monitor lock
         monitor.unlock();
     }
 

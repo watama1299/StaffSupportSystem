@@ -14,6 +14,12 @@ import java.util.stream.Collectors;
 public class RainforestShop {
 
     /// For correctly implementing the server, pelase consider that
+    /**
+     * NEED TO IMPLEMENT MONITOR FOR CONCURRENCY
+     */
+
+
+
 
     /**
      * Boolean to keep track of pessimistic or optimistic transaction
@@ -49,6 +55,7 @@ public class RainforestShop {
      * Queue that keeps track of product names that has been purchased and needs to be restocked
      */
     private volatile Queue<String> currentEmptyItem;
+
 
 
     public boolean isGlobalLock() {
