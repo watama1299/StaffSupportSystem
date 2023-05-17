@@ -1,7 +1,10 @@
 package uk.ncl.CSC8016.jackbergus.coursework.project2.testing;
 
+import uk.ncl.CSC8016.jackbergus.coursework.project2.processes.ClientLifecycle;
 import uk.ncl.CSC8016.jackbergus.coursework.project2.processes.RainforestShop;
+import uk.ncl.CSC8016.jackbergus.coursework.project2.processes.SupplierLifecycle;
 import uk.ncl.CSC8016.jackbergus.coursework.project2.processes.Transaction;
+import uk.ncl.CSC8016.jackbergus.coursework.project2.utils.BasketResult;
 import uk.ncl.CSC8016.jackbergus.coursework.project2.utils.Item;
 import uk.ncl.CSC8016.jackbergus.slides.semaphores.scheduler.Pair;
 
@@ -16,7 +19,14 @@ public class Testing {
     public static final String ANSI_RED = "\u001B[31m";
     public static final String ANSI_GREEN = "\u001B[32m";
 
-    public static Function<Boolean,List<Message>> test_12 = (Boolean isGlobalLock) -> null;
+    public static Function<Boolean,List<Message>> test_12 = (Boolean isGlobalLock) -> {
+        List<Message> first_test = new ArrayList<>();
+        List<String> ofUserNames = new ArrayList<>();
+        ofUserNames.add("bogus");
+
+
+        return first_test;
+    };
 
     public static Function<Boolean,List<Message>> test_11 = (Boolean isGlobalLock) -> {
         List<Message> first_test = new ArrayList<>();
@@ -200,7 +210,34 @@ public class Testing {
     };
 
     public static Function<Boolean,List<Message>> test_03 = (Boolean isGlobalLock) -> {
-        return null;
+        List<Message> first_test = new ArrayList<>();
+        List<String> ofUserNames = new ArrayList<>();
+        ofUserNames.add("bogus");
+
+        // 1) The same user can open multiple transactions (contemporary open)
+        {
+            Map<String, Pair<Double, Integer>> m = new HashMap<>();
+            m.put("product", new Pair<>(1.0, 2));
+            RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
+
+            // make 2 threads of client lifecycle
+            ClientLifecycle client1 = new ClientLifecycle("bogus",s,0,0,100,1);
+            ClientLifecycle client2 = new ClientLifecycle("bogus",s,0,0,100,2);
+
+            // generate 2 clients with the same name
+            try {
+                BasketResult c1 = client1.startJoinAndGetResult(true);
+                BasketResult c2 = client2.startJoinAndGetResult(true);
+                if (c1 != null && c2 != null) {
+                    first_test.add(new Message(true, "Pass"));
+                } else {
+                    first_test.add(new Message(false, "Fail"));
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return first_test;
     };
 
 
@@ -609,13 +646,404 @@ public class Testing {
         return first_test;
     };
 
-    public static Function<Boolean,List<Message>> test_07 = (Boolean isGlobalLock) -> null;
+    public static Function<Boolean,List<Message>> test_07 = (Boolean isGlobalLock) -> {
+        List<Message> first_test = new ArrayList<>();
+        List<String> ofUserNames = new ArrayList<>();
+        ofUserNames.add("bogusA");
+        ofUserNames.add("bogusB");
 
-    public static Function<Boolean,List<Message>> test_08 = (Boolean isGlobalLock) -> null;
+        // 1) Client-client contemporary access
+        {
+            Map<String, Pair<Double, Integer>> m = new HashMap<>();
+            m.put("product", new Pair<>(1.0, 1));
+            RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
 
-    public static Function<Boolean,List<Message>> test_09 = (Boolean isGlobalLock) -> null;
+            // make 2 threads of client lifecycle
+            ClientLifecycle client1 = new ClientLifecycle("bogusA",s,1,0,100,1);
+            ClientLifecycle client2 = new ClientLifecycle("bogusB",s,1,0,100,2);
 
-    public static Function<Boolean,List<Message>> test_10 = (Boolean isGlobalLock) -> null;
+            // generate 2 clients with the same name
+            try {
+                BasketResult c1 = client1.startJoinAndGetResult(true);
+                BasketResult c2 = client2.startJoinAndGetResult(true);
+                if (!c1.boughtItems.equals(c2.boughtItems)) {
+                    first_test.add(new Message(true, "GOOD (1): Client-Client"));
+                } else {
+                    first_test.add(new Message(false, "BAD (1): Client-Client"));
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // 2) Client-Supplier contemporary access
+        {
+
+        }
+        return first_test;
+    };
+
+    public static Function<Boolean,List<Message>> test_08 = (Boolean isGlobalLock) -> {
+        List<Message> first_test = new ArrayList<>();
+        List<String> ofUserNames = new ArrayList<>();
+        ofUserNames.add("bogusA");
+        ofUserNames.add("bogusB");
+        ofUserNames.add("bogusC");
+
+        // 1) 1 user buy all items
+        {
+            Map<String, Pair<Double, Integer>> m = new HashMap<>();
+            m.put("product", new Pair<>(1.0, 5));
+            RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
+
+            // make 1 thread of client lifecycle
+            ClientLifecycle client1 = new ClientLifecycle("bogusA",s,5,0,100,1);
+
+            // start client transaction
+            try {
+                BasketResult c1 = client1.startJoinAndGetResult(true);
+                if (c1.boughtItems.size() == 5) {
+                    first_test.add(new Message(true, "GOOD (1): Client successfully bought all item"));
+                } else {
+                    first_test.add(new Message(false, "BAD (1): Client unsuccessfully bought all item"));
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // 2) Multiple users buy all items
+        {
+            Map<String, Pair<Double, Integer>> m = new HashMap<>();
+            m.put("product", new Pair<>(1.0, 10));
+            RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
+
+            // make 3 threads of client lifecycle
+            ClientLifecycle client1 = new ClientLifecycle("bogusA",s,5,0,100,1);
+            ClientLifecycle client2 = new ClientLifecycle("bogusB",s,3,0,100,2);
+            ClientLifecycle client3 = new ClientLifecycle("bogusC",s,2,0,100,3);
+
+            // start 3 clients transaction
+            try {
+                BasketResult c1 = client1.startJoinAndGetResult(true);
+                BasketResult c2 = client2.startJoinAndGetResult(true);
+                BasketResult c3 = client3.startJoinAndGetResult(true);
+                if (c1.boughtItems.size() == 5 && c2.boughtItems.size() == 3 && c3.boughtItems.size() == 2) {
+                    first_test.add(new Message(true, "GOOD (2): All clients successfully bought all their items"));
+                } else {
+                    first_test.add(new Message(false, "BAD (2): Clients unsuccessfully bought their items"));
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // 3) 1 user buy all items but didn't have enough money
+        {
+            Map<String, Pair<Double, Integer>> m = new HashMap<>();
+            m.put("product", new Pair<>(1.0, 5));
+            RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
+
+            // make 1 thread of client lifecycle
+            ClientLifecycle client1 = new ClientLifecycle("bogusA",s,5,0,0,1);
+
+            // start client transaction
+            try {
+                BasketResult c1 = client1.startJoinAndGetResult(true);
+                if (c1.boughtItems.size() == 0) {
+                    first_test.add(new Message(true, "GOOD (3): Client didn't have enough money to buy all their items"));
+                } else {
+                    first_test.add(new Message(false, "BAD (3): Error"));
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return first_test;
+    };
+
+    public static Function<Boolean,List<Message>> test_09 = (Boolean isGlobalLock) -> {
+        List<Message> first_test = new ArrayList<>();
+        List<String> ofUserNames = new ArrayList<>();
+        ofUserNames.add("bogusA");
+
+        /**
+        // 1) The supplier shall not be triggered if products are basketed but not bought
+        {
+            Map<String, Pair<Double, Integer>> m = new HashMap<>();
+            m.put("product", new Pair<>(1.0, 5));
+            RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
+
+            // make 1 thread of client lifecycle
+            ClientLifecycle client1 = new ClientLifecycle("bogusA",s,5,0,100,1);
+
+            // make 1 thread of supplier lifecycle
+            SupplierLifecycle supplier1 = new SupplierLifecycle(s);
+
+            // start supplier & client
+            try {
+                Thread s1 = supplier1.startThread();
+                BasketResult c1 = client1.startJoinAndGetResult(false);
+                if (c1.boughtItems.size() == 5) {
+                    first_test.add(new Message(true, "GOOD (1): Client successfully bought all item"));
+                } else {
+                    first_test.add(new Message(false, "BAD (1): Client unsuccessfully bought all item"));
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // 2) Supplier triggered if shelf of given product empty
+        {
+            Map<String, Pair<Double, Integer>> m = new HashMap<>();
+            m.put("product", new Pair<>(1.0, 10));
+            RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
+
+            // make 3 threads of client lifecycle
+            ClientLifecycle client1 = new ClientLifecycle("bogusA",s,5,0,100,1);
+            ClientLifecycle client2 = new ClientLifecycle("bogusB",s,3,0,100,2);
+            ClientLifecycle client3 = new ClientLifecycle("bogusC",s,2,0,100,3);
+
+            // start 3 clients transaction
+            try {
+                BasketResult c1 = client1.startJoinAndGetResult(true);
+                BasketResult c2 = client2.startJoinAndGetResult(true);
+                BasketResult c3 = client3.startJoinAndGetResult(true);
+                if (c1.boughtItems.size() == 5 && c2.boughtItems.size() == 3 && c3.boughtItems.size() == 2) {
+                    first_test.add(new Message(true, "GOOD (2): All clients successfully bought all their items"));
+                } else {
+                    first_test.add(new Message(false, "BAD (2): Clients unsuccessfully bought their items"));
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // 3) After restock, client should be able to buy the item again
+        {
+            Map<String, Pair<Double, Integer>> m = new HashMap<>();
+            m.put("product", new Pair<>(1.0, 5));
+            RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
+
+            // make 1 thread of client lifecycle
+            ClientLifecycle client1 = new ClientLifecycle("bogusA",s,5,0,0,1);
+
+            // start client transaction
+            try {
+                BasketResult c1 = client1.startJoinAndGetResult(true);
+                if (c1.boughtItems.size() == 0) {
+                    first_test.add(new Message(true, "GOOD (3): Client didn't have enough money to buy all their items"));
+                } else {
+                    first_test.add(new Message(false, "BAD (3): Error"));
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        */
+        return first_test;
+    };
+
+    public static Function<Boolean,List<Message>> test_10 = (Boolean isGlobalLock) -> {
+        List<Message> first_test = new ArrayList<>();
+        List<String> ofUserNames = new ArrayList<>();
+        ofUserNames.add("bogusA");
+        ofUserNames.add("bogusB");
+
+        // 2 Distinct users
+        // 1) Clients bought max number of items
+        {
+            Map<String, Pair<Double, Integer>> m = new HashMap<>();
+            m.put("product1", new Pair<>(1.0, 5));
+            m.put("product2", new Pair<>(1.0, 5));
+            RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
+
+            // make 2 threads of client lifecycle
+            ClientLifecycle client1 = new ClientLifecycle("bogusA",s,5,0,100,1);
+            ClientLifecycle client2 = new ClientLifecycle("bogusB",s,5,0,100,2);
+
+            // generate 2 clients
+            try {
+                BasketResult c1 = client1.startJoinAndGetResult(true);
+                BasketResult c2 = client2.startJoinAndGetResult(true);
+
+                Set<String> actualGone = new HashSet<>(Arrays.asList(s.getNextMissingItem(),s.getNextMissingItem()));
+                //System.out.println(actualGone);
+                Set<String> expectedGone = new HashSet<>(Arrays.asList("product1","product2"));
+                //System.out.println(expectedGone);
+                if (actualGone.equals(expectedGone)) {
+                    first_test.add(new Message(true, "GOOD (1): 2 distinct clients successfully empty out all items"));
+                } else {
+                    first_test.add(new Message(false, "BAD (1): 2 distinct clients unsuccessfully empty out all items"));
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // 2) Clients bought 3 distinct item each
+        {
+            Map<String, Pair<Double, Integer>> m = new HashMap<>();
+            m.put("product1", new Pair<>(1.0, 6));
+            m.put("product2", new Pair<>(1.0, 6));
+            m.put("product3", new Pair<>(1.0, 6));
+            RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
+
+            // make 2 threads of client lifecycle
+            ClientLifecycle client1 = new ClientLifecycle("bogusA",s,9,0,100,1);
+            ClientLifecycle client2 = new ClientLifecycle("bogusB",s,9,0,100,2);
+
+            // generate 2 clients
+            try {
+                BasketResult c1 = client1.startJoinAndGetResult(true);
+                BasketResult c2 = client2.startJoinAndGetResult(true);
+
+                Set<String> c1Buy = new HashSet<>();
+                for (Item i : c1.boughtItems) {
+                    c1Buy.add(i.productName);
+                }
+                //System.out.println(c1Buy);
+
+                Set<String> c2Buy = new HashSet<>();
+                for (Item i : c2.boughtItems) {
+                    c2Buy.add(i.productName);
+                }
+                //System.out.println(c2Buy);
+
+                if (c1Buy.equals(c2Buy)) {
+                    first_test.add(new Message(true, "GOOD (2): 2 distinct clients successfully bought 3 distinct items each"));
+                } else {
+                    first_test.add(new Message(false, "BAD (2): 2 distinct clients unsuccessfully bought 3 distinct items each"));
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // 3) Clients cannot buy the same exact item
+        {
+            Map<String, Pair<Double, Integer>> m = new HashMap<>();
+            m.put("product1", new Pair<>(1.0, 1));
+            RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
+
+            // make 2 threads of client lifecycle
+            ClientLifecycle client1 = new ClientLifecycle("bogusA",s,1,0,100,1);
+            ClientLifecycle client2 = new ClientLifecycle("bogusB",s,1,0,100,2);
+
+            // generate 2 clients
+            try {
+                BasketResult c1 = client1.startJoinAndGetResult(true);
+                BasketResult c2 = client2.startJoinAndGetResult(true);
+
+                if (c1.boughtItems.equals(c2.unavailableItems) || c2.boughtItems.equals(c1.unavailableItems)) {
+                    first_test.add(new Message(true, "GOOD (3): 2 distinct clients could not buy the same exact item"));
+                } else {
+                    first_test.add(new Message(false, "BAD (3): 2 distinct clients could buy the same exact item"));
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // 1 user, 2 transactions
+        // 4) Clients bought max number of items
+        {
+            Map<String, Pair<Double, Integer>> m = new HashMap<>();
+            m.put("product1", new Pair<>(1.0, 5));
+            m.put("product2", new Pair<>(1.0, 5));
+            RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
+
+            // make 2 threads of client lifecycle
+            ClientLifecycle client1 = new ClientLifecycle("bogusA",s,5,0,100,1);
+            ClientLifecycle client2 = new ClientLifecycle("bogusA",s,5,0,100,2);
+
+            // generate 2 clients
+            try {
+                BasketResult c1 = client1.startJoinAndGetResult(true);
+                BasketResult c2 = client2.startJoinAndGetResult(true);
+
+                Set<String> actualGone = new HashSet<>(Arrays.asList(s.getNextMissingItem(),s.getNextMissingItem()));
+                //System.out.println(actualGone);
+                Set<String> expectedGone = new HashSet<>(Arrays.asList("product1","product2"));
+                //System.out.println(expectedGone);
+                if (actualGone.equals(expectedGone)) {
+                    first_test.add(new Message(true, "GOOD (4): User with 2 transactions successfully empty out all items"));
+                } else {
+                    first_test.add(new Message(false, "BAD (4): User with 2 transactions unsuccessfully empty out all items"));
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // 5) Clients bought 3 distinct item each
+        {
+            Map<String, Pair<Double, Integer>> m = new HashMap<>();
+            m.put("product1", new Pair<>(1.0, 6));
+            m.put("product2", new Pair<>(1.0, 6));
+            m.put("product3", new Pair<>(1.0, 6));
+            RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
+
+            // make 2 threads of client lifecycle
+            ClientLifecycle client1 = new ClientLifecycle("bogusA",s,9,0,100,1);
+            ClientLifecycle client2 = new ClientLifecycle("bogusA",s,9,0,100,2);
+
+            // generate 2 clients
+            try {
+                BasketResult c1 = client1.startJoinAndGetResult(true);
+                BasketResult c2 = client2.startJoinAndGetResult(true);
+
+                Set<String> c1Buy = new HashSet<>();
+                for (Item i : c1.boughtItems) {
+                    c1Buy.add(i.productName);
+                }
+                //System.out.println(c1Buy);
+
+                Set<String> c2Buy = new HashSet<>();
+                for (Item i : c2.boughtItems) {
+                    c2Buy.add(i.productName);
+                }
+                //System.out.println(c2Buy);
+
+                if (c1Buy.equals(c2Buy)) {
+                    first_test.add(new Message(true, "GOOD (5): User with 2 transactions successfully bought 3 distinct items in each transaction"));
+                } else {
+                    first_test.add(new Message(false, "BAD (5): User with 2 transactions unsuccessfully bought 3 distinct items in each transaction"));
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // 6) Clients cannot buy the same exact item
+        {
+            Map<String, Pair<Double, Integer>> m = new HashMap<>();
+            m.put("product1", new Pair<>(1.0, 1));
+            RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
+
+            // make 2 threads of client lifecycle
+            ClientLifecycle client1 = new ClientLifecycle("bogusA",s,1,0,100,1);
+            ClientLifecycle client2 = new ClientLifecycle("bogusA",s,1,0,100,2);
+
+            // generate 2 clients
+            try {
+                BasketResult c1 = client1.startJoinAndGetResult(true);
+                BasketResult c2 = client2.startJoinAndGetResult(true);
+
+                if (c1.boughtItems.equals(c2.unavailableItems) || c2.boughtItems.equals(c1.unavailableItems)) {
+                    first_test.add(new Message(true, "GOOD (6): User with 2 transactions could not buy the same exact instance of item twice"));
+                } else {
+                    first_test.add(new Message(false, "BAD (6): User with 2 transactions could buy the same exact instance of item twice"));
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return first_test;
+    };
 
 
     public static boolean isGlobal = true;

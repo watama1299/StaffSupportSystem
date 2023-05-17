@@ -50,13 +50,17 @@ public class ClientLifecycle implements Runnable {
 
     @Override
     public void run() {
+        //System.out.println(Thread.currentThread().getName());
         l = null;
         double nextAfter = Math.nextUp(1.0);
         if (s != null) {
             s.login(username).ifPresent(transaction -> {
+                //System.out.println("2");
                 for (int i = 0; i< items_to_pick_up; i++) {
                     var obj = UtilityMethods.getRandomElement(s.getAvailableItems(transaction), rng);
+                    //System.out.println("3");
                     if (obj == null) break;
+                    //System.out.println("4");
                     if (transaction.basketProduct(obj)) {
                         if (rng.nextDouble(0.0, nextAfter) < shelfing_prob) {
                             if (!transaction.shelfProduct(UtilityMethods.getRandomElement(transaction.getUnmutableBasket(), rng)))

@@ -28,6 +28,7 @@ public class SupplierLifecycle implements Runnable {
     @Override
     public void run() {
         while (true) {
+            System.out.println(Thread.currentThread().getState());
             String product = s.getNextMissingItem();
             if (product.equals("@stop!")) {
                 s.supplierStopped(stopped);

@@ -81,13 +81,28 @@ public class RainforestShop {
     public RainforestShop(Collection<String> client_ids,
                           Map<String, Pair<Double, Integer>> available_products,
                           boolean isGlobalLock) {
+        // initialise supplier as not running
         supplierStopped = true;
+
+        // initialise queue of Items as LinkedBlockingQueue -> concurrent Java datastructure
         currentEmptyItem = new LinkedBlockingQueue<>();
+
+        // setting globallock for pessimistic or optimistic transaction
         this.isGlobalLock = isGlobalLock;
+
+        // initialise client list as hashset
         allowed_clients = new HashSet<>();
+
+        // populating client list using the input parameter
         if (client_ids != null) allowed_clients.addAll(client_ids);
+
+        // initialise product list as hashmap
         this.available_withdrawn_products = new HashMap<>();
+
+        // initialise user id map as hashmap
         UUID_to_user = new HashMap<>();
+
+        // populating product list using the input parameter
         if (available_products != null) for (var x : available_products.entrySet()) {
             // going through the input hashmap parameter
             if (x.getKey().equals("@stop!")) continue;
@@ -185,12 +200,17 @@ public class RainforestShop {
         List<String> ls = Collections.emptyList();
         // TODO: Implement the remaining part!
 
+        // redefine ls because Collections.emptyList() gives an immutable (unchangeable) list
+        ls = new ArrayList<>();
         if (!this.equals(transaction.getSelf())) return ls;
+        //System.out.println("a");
 
         // check ProductMonitor for each item to see if !available.isEmpty()
         for (Map.Entry<String, ProductMonitor> item : transaction.getSelf().available_withdrawn_products.entrySet()) {
+            //System.out.println("b");
             //if (!item.getValue().available.isEmpty()) ls.add(item.getKey());
             ls.addAll(item.getValue().getAvailableItems());
+            //System.out.println("d");
         }
 
         return ls;
@@ -257,8 +277,6 @@ public class RainforestShop {
     public void stopSupplier() {
         // TODO: Provide a correct concurrent implementation!
         currentEmptyItem.add("@stop!");
-
-
     }
 
     /**
