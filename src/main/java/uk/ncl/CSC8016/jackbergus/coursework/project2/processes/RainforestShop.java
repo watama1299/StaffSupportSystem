@@ -7,19 +7,16 @@ import uk.ncl.CSC8016.jackbergus.slides.semaphores.scheduler.Pair;
 
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 public class RainforestShop {
 
     /// For correctly implementing the server, pelase consider that
-    /**
-     * NEED TO IMPLEMENT MONITOR FOR CONCURRENCY
-     */
-
-
-
 
     /**
      * Boolean to keep track of pessimistic or optimistic transaction
@@ -56,6 +53,11 @@ public class RainforestShop {
      */
     private volatile Queue<String> currentEmptyItem;
 
+    /**
+     * Reentrant lock for volatile queue currentEmptyItem
+     */
+    ReentrantLock currEmptyItemLock;
+
 
 
     public boolean isGlobalLock() {
@@ -86,6 +88,9 @@ public class RainforestShop {
 
         // initialise queue of Items as LinkedBlockingQueue -> concurrent Java datastructure
         currentEmptyItem = new LinkedBlockingQueue<>();
+
+        // lock for currentEmptyItem
+        currEmptyItemLock = new ReentrantLock(true);
 
         // setting globallock for pessimistic or optimistic transaction
         this.isGlobalLock = isGlobalLock;
@@ -276,7 +281,13 @@ public class RainforestShop {
      */
     public void stopSupplier() {
         // TODO: Provide a correct concurrent implementation!
-        currentEmptyItem.add("@stop!");
+        currEmptyItemLock.lock();
+        try {
+            currentEmptyItem.add("@stop!");
+            System.out.println("sent");
+        } finally {
+            currEmptyItemLock.unlock();
+        }
     }
 
     /**
@@ -286,8 +297,13 @@ public class RainforestShop {
      */
     public void supplierStopped(AtomicBoolean stopped) {
         // TODO: Provide a correct concurrent implementation!
-        supplierStopped = true;
-        stopped.set(true);
+        currEmptyItemLock.lock();
+        try {
+            supplierStopped = true;
+            stopped.set(true);
+        } finally {
+            currEmptyItemLock.unlock();
+        }
     }
 
     /**
@@ -299,9 +315,20 @@ public class RainforestShop {
      */
     public String getNextMissingItem() {
         // TODO: Provide a correct concurrent implementation!
-        supplierStopped = false;
-        while (currentEmptyItem.isEmpty());
-        return currentEmptyItem.remove();
+        String out;
+        currEmptyItemLock.lock();
+        try {
+            supplierStopped = false;
+            while (currentEmptyItem.isEmpty()) {
+                //System.out.println("empty");
+            }
+            out = currentEmptyItem.remove();
+            //if (currentEmptyItem.size() == 1) stopSupplier();
+        } finally {
+            currEmptyItemLock.unlock();
+        }
+        return out;
+        //return currentEmptyItem.remove();
     }
 
 
@@ -385,6 +412,7 @@ public class RainforestShop {
             // saves the summary of the checkout into result
             result = new BasketResult(currentlyPurchasable, currentlyUnavailable, total_available_money, total_cost, total_available_money - total_cost);
         }
+
         return result;
     }
 }

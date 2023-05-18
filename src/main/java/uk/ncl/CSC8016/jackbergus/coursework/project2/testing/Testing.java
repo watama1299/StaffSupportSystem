@@ -19,60 +19,7 @@ public class Testing {
     public static final String ANSI_RED = "\u001B[31m";
     public static final String ANSI_GREEN = "\u001B[32m";
 
-    public static Function<Boolean,List<Message>> test_12 = (Boolean isGlobalLock) -> {
-        List<Message> first_test = new ArrayList<>();
-        List<String> ofUserNames = new ArrayList<>();
-        ofUserNames.add("bogus");
 
-
-        return first_test;
-    };
-
-    public static Function<Boolean,List<Message>> test_11 = (Boolean isGlobalLock) -> {
-        List<Message> first_test = new ArrayList<>();
-        List<String> ofUserNames = new ArrayList<>();
-        ofUserNames.add("user1");
-        ofUserNames.add("user2");
-        Map<String, Pair<Double, Integer>> m = new HashMap<>();
-        m.put("product", new Pair<>(1.0, 3));
-
-        /// TEST 1) A user cannot shelf a product if nothing was basketed
-        {
-            RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
-            Optional<Transaction> l = s.login("user2");
-            if (l.isPresent()) {
-                var transaction = l.get();
-
-                if (!transaction.shelfProduct(new Item("product", 1.0, BigInteger.TEN))) {
-                    first_test.add(new Message(true, "GOOD (1): cannot shelf a product that doesn't exist!"));
-                } else {
-                    first_test.add(new Message(false, "ERROR (1): shelving an unexistant product!"));
-                }
-
-                if (!transaction.shelfProduct(new Item("product", 1.0, BigInteger.ONE))) {
-                    first_test.add(new Message(true, "GOOD (2): cannot shelf a product that wasn't basketed (no basketing)!"));
-                } else {
-                    first_test.add(new Message(false, "ERROR (2): shelving a product that wasn't basketed (no basketing)!"));
-                }
-
-                transaction.basketProduct("product");
-                Item i = transaction.getUnmutableBasket().get(0);
-                if (!transaction.shelfProduct(new Item("product", 1.0, BigInteger.TEN.add(i.id)))) {
-                    first_test.add(new Message(true, "GOOD (3): cannot shelf a product that wasn't basketed (with basketing)!"));
-                } else {
-                    first_test.add(new Message(false, "ERROR (3): shelving a product that wasn't basketed (with basketing)!"));
-                }
-
-                if (transaction.shelfProduct(i)) {
-                    first_test.add(new Message(true, "GOOD (4): can shelf a product that was basketed (with basketing)!"));
-                } else {
-                    first_test.add(new Message(false, "ERROR (4): not shelving a product that was basketed (with basketing)!"));
-                }
-            }
-        }
-
-        return first_test;
-    };
     public static Function<Boolean,List<Message>> test_01 = (Boolean isGlobalLock) -> {
         List<Message> first_test = new ArrayList<>();
         List<String> ofUserNames = new ArrayList<>();
@@ -646,6 +593,7 @@ public class Testing {
         return first_test;
     };
 
+    // TODO
     public static Function<Boolean,List<Message>> test_07 = (Boolean isGlobalLock) -> {
         List<Message> first_test = new ArrayList<>();
         List<String> ofUserNames = new ArrayList<>();
@@ -767,7 +715,6 @@ public class Testing {
         List<String> ofUserNames = new ArrayList<>();
         ofUserNames.add("bogusA");
 
-        /**
         // 1) The supplier shall not be triggered if products are basketed but not bought
         {
             Map<String, Pair<Double, Integer>> m = new HashMap<>();
@@ -775,7 +722,7 @@ public class Testing {
             RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
 
             // make 1 thread of client lifecycle
-            ClientLifecycle client1 = new ClientLifecycle("bogusA",s,5,0,100,1);
+            ClientLifecycle client1 = new ClientLifecycle("bogusA", s, 5, 0, 100, 1);
 
             // make 1 thread of supplier lifecycle
             SupplierLifecycle supplier1 = new SupplierLifecycle(s);
@@ -784,65 +731,86 @@ public class Testing {
             try {
                 Thread s1 = supplier1.startThread();
                 BasketResult c1 = client1.startJoinAndGetResult(false);
-                if (c1.boughtItems.size() == 5) {
-                    first_test.add(new Message(true, "GOOD (1): Client successfully bought all item"));
+                //System.out.println(s1.getState());
+                if (!supplier1.isStopped()) {
+                    first_test.add(new Message(true, "GOOD (1): Supplier was not triggered"));
                 } else {
-                    first_test.add(new Message(false, "BAD (1): Client unsuccessfully bought all item"));
+                    first_test.add(new Message(false, "BAD (1): Error"));
                 }
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
+
 
         // 2) Supplier triggered if shelf of given product empty
         {
             Map<String, Pair<Double, Integer>> m = new HashMap<>();
-            m.put("product", new Pair<>(1.0, 10));
+            m.put("product", new Pair<>(1.0, 1));
             RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
 
-            // make 3 threads of client lifecycle
-            ClientLifecycle client1 = new ClientLifecycle("bogusA",s,5,0,100,1);
-            ClientLifecycle client2 = new ClientLifecycle("bogusB",s,3,0,100,2);
-            ClientLifecycle client3 = new ClientLifecycle("bogusC",s,2,0,100,3);
+            // make 1 thread of client lifecycle
+            ClientLifecycle client1 = new ClientLifecycle("bogusA",s,1,0,100,1);
 
-            // start 3 clients transaction
+            // make 1 thread of supplier lifecycle
+            SupplierLifecycle supplier1 = new SupplierLifecycle(s);
+
+            // start supplier & client
             try {
+                Thread s1 = supplier1.startThread();
                 BasketResult c1 = client1.startJoinAndGetResult(true);
-                BasketResult c2 = client2.startJoinAndGetResult(true);
-                BasketResult c3 = client3.startJoinAndGetResult(true);
-                if (c1.boughtItems.size() == 5 && c2.boughtItems.size() == 3 && c3.boughtItems.size() == 2) {
-                    first_test.add(new Message(true, "GOOD (2): All clients successfully bought all their items"));
-                } else {
-                    first_test.add(new Message(false, "BAD (2): Clients unsuccessfully bought their items"));
-                }
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+
+            while (!supplier1.hasAProductBeenProduced()) {
+                //first_test.add(new Message(false, "BAD (2): Error"));
+            }
+            first_test.add(new Message(true, "GOOD (2): Supplier triggered if given product was empty"));
+
+            if (!supplier1.isStopped() && supplier1.hasAProductBeenProduced()) s.stopSupplier();
         }
+
 
         // 3) After restock, client should be able to buy the item again
         {
             Map<String, Pair<Double, Integer>> m = new HashMap<>();
-            m.put("product", new Pair<>(1.0, 5));
+            m.put("product", new Pair<>(1.0, 1));
             RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
 
-            // make 1 thread of client lifecycle
-            ClientLifecycle client1 = new ClientLifecycle("bogusA",s,5,0,0,1);
+            // make 2 thread of client lifecycle
+            ClientLifecycle client1 = new ClientLifecycle("bogusA",s,1,0,100,1);
+            ClientLifecycle client2 = new ClientLifecycle("bogusA",s,1,0,100,1);
 
-            // start client transaction
+            // make 1 thread of supplier lifecycle
+            SupplierLifecycle supplier1 = new SupplierLifecycle(s);
+
+            // start supplier & client
             try {
+                Thread s1 = supplier1.startThread();
                 BasketResult c1 = client1.startJoinAndGetResult(true);
-                if (c1.boughtItems.size() == 0) {
-                    first_test.add(new Message(true, "GOOD (3): Client didn't have enough money to buy all their items"));
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            while (!supplier1.hasAProductBeenProduced()) {
+                //first_test.add(new Message(false, "BAD (2): Error"));
+            }
+            try {
+                BasketResult c2 = client2.startJoinAndGetResult(true);
+                if (!c2.boughtItems.isEmpty()) {
+                    first_test.add(new Message(true, "GOOD (3): Client able to buy product after refurbishing"));
                 } else {
                     first_test.add(new Message(false, "BAD (3): Error"));
                 }
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+
+
+            if (!supplier1.isStopped() && supplier1.hasAProductBeenProduced()) s.stopSupplier();
         }
 
-        */
         return first_test;
     };
 
@@ -1045,6 +1013,86 @@ public class Testing {
         return first_test;
     };
 
+    public static Function<Boolean,List<Message>> test_11 = (Boolean isGlobalLock) -> {
+        List<Message> first_test = new ArrayList<>();
+        List<String> ofUserNames = new ArrayList<>();
+        ofUserNames.add("user1");
+        ofUserNames.add("user2");
+        Map<String, Pair<Double, Integer>> m = new HashMap<>();
+        m.put("product", new Pair<>(1.0, 3));
+
+        /// TEST 1) A user cannot shelf a product if nothing was basketed
+        {
+            RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
+            Optional<Transaction> l = s.login("user2");
+            if (l.isPresent()) {
+                var transaction = l.get();
+
+                if (!transaction.shelfProduct(new Item("product", 1.0, BigInteger.TEN))) {
+                    first_test.add(new Message(true, "GOOD (1): cannot shelf a product that doesn't exist!"));
+                } else {
+                    first_test.add(new Message(false, "ERROR (1): shelving an unexistant product!"));
+                }
+
+                if (!transaction.shelfProduct(new Item("product", 1.0, BigInteger.ONE))) {
+                    first_test.add(new Message(true, "GOOD (2): cannot shelf a product that wasn't basketed (no basketing)!"));
+                } else {
+                    first_test.add(new Message(false, "ERROR (2): shelving a product that wasn't basketed (no basketing)!"));
+                }
+
+                transaction.basketProduct("product");
+                Item i = transaction.getUnmutableBasket().get(0);
+                if (!transaction.shelfProduct(new Item("product", 1.0, BigInteger.TEN.add(i.id)))) {
+                    first_test.add(new Message(true, "GOOD (3): cannot shelf a product that wasn't basketed (with basketing)!"));
+                } else {
+                    first_test.add(new Message(false, "ERROR (3): shelving a product that wasn't basketed (with basketing)!"));
+                }
+
+                if (transaction.shelfProduct(i)) {
+                    first_test.add(new Message(true, "GOOD (4): can shelf a product that was basketed (with basketing)!"));
+                } else {
+                    first_test.add(new Message(false, "ERROR (4): not shelving a product that was basketed (with basketing)!"));
+                }
+            }
+        }
+
+        return first_test;
+    };
+
+    public static Function<Boolean,List<Message>> test_12 = (Boolean isGlobalLock) -> {
+        List<Message> first_test = new ArrayList<>();
+        List<String> ofUserNames = new ArrayList<>();
+        ofUserNames.add("bogus");
+
+        {
+            Map<String, Pair<Double, Integer>> m = new HashMap<>();
+            m.put("product", new Pair<>(1.0, 1));
+            RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
+
+            // make 1 thread of client lifecycle
+            ClientLifecycle client1 = new ClientLifecycle("bogusA", s, 1, 0, 100, 1);
+
+            // make 1 thread of supplier lifecycle
+            SupplierLifecycle supplier1 = new SupplierLifecycle(s);
+
+            // start supplier & client
+            try {
+                Thread s1 = supplier1.startThread();
+                BasketResult c1 = client1.startJoinAndGetResult(true);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            while (!supplier1.hasAProductBeenProduced()) {
+                //first_test.add(new Message(false, "BAD (2): Error"));
+            }
+            first_test.add(new Message(true, "GOOD (2): Supplier triggered if given product was empty"));
+
+            if (!supplier1.isStopped() && supplier1.hasAProductBeenProduced()) s.stopSupplier();
+        }
+        return first_test;
+    };
+
 
     public static boolean isGlobal = true;
     public static double total_score = 0.0;
@@ -1070,6 +1118,8 @@ public class Testing {
         if (args.length > 0) {
             isGlobal = args[0].equals("global");
         }
+        System.out.println("Num of active threads: " + Thread.activeCount());
+        Set<Thread> initThread = Thread.getAllStackTraces().keySet();
 
         System.out.println("I. Single Threaded Correctness");
         System.out.println("==============================");
@@ -1127,6 +1177,10 @@ public class Testing {
 
         System.out.println("");
         System.out.println("[" + StudentId + "] Total Score: " + total_score + "/" + total_max_score + " = " + (total_score/total_max_score));
+        System.out.println("Num of active threads: " + Thread.activeCount());
+        Set<Thread> endThread = Thread.getAllStackTraces().keySet();
+        endThread.removeAll(initThread);
+        System.out.println(endThread);
     }
 
     public static double sumUpOk(Collection<Message> msg) {

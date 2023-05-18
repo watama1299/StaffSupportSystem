@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="599c20b3-89b2-41c4-82f3-35ccac701927" name="Changes" comment="Progress update 16/05/2023 12:36PM">
+    <list default="true" id="599c20b3-89b2-41c4-82f3-35ccac701927" name="Changes" comment="Progress update 17/05/2023 12:37PM">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/ClientLifecycle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/ClientLifecycle.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/RainforestShop.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/RainforestShop.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/SupplierLifecycle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/SupplierLifecycle.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/testing/Testing.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/testing/Testing.java" afterDir="false" />
@@ -43,18 +42,18 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "jdk.selected.JAVA_MODULE": "openjdk-19",
-    "last_opened_file_path": "D:/Documents/PG - Comp Sci/Sem 2/03 - Adv Programming/Coursework/NCL_CSC8016-main/pom.xml",
-    "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "MavenSettings"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;jdk.selected.JAVA_MODULE&quot;: &quot;openjdk-19&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Documents/PG - Comp Sci/Sem 2/03 - Adv Programming/Coursework/NCL_CSC8016-main/pom.xml&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;MavenSettings&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyClassDialog.RECENTS_KEY">
       <recent name="uk.ncl.CSC8016.jackbergus.coursework.project2.processes" />
@@ -119,7 +118,14 @@
       <option name="project" value="LOCAL" />
       <updated>1684237007511</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Progress update 17/05/2023 12:37PM">
+      <created>1684323447447</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1684323447447</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -138,6 +144,7 @@
     <MESSAGE value="Remove unnecessary commented code" />
     <MESSAGE value="Progress update 15/05/2023" />
     <MESSAGE value="Progress update 16/05/2023 12:36PM" />
-    <option name="LAST_COMMIT_MESSAGE" value="Progress update 16/05/2023 12:36PM" />
+    <MESSAGE value="Progress update 17/05/2023 12:37PM" />
+    <option name="LAST_COMMIT_MESSAGE" value="Progress update 17/05/2023 12:37PM" />
   </component>
 </project>
