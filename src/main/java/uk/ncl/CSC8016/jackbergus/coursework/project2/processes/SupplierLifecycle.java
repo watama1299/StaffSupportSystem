@@ -30,21 +30,21 @@ public class SupplierLifecycle implements Runnable {
     public void run() {
         while (true) {
             System.out.println(Thread.currentThread().getName());
-            System.out.println(0);
+            //System.out.println(0);
             String product = s.getNextMissingItem();
-            System.out.println(1);
+            //System.out.println(1);
             if (product.equals("@stop!")) {
-                System.out.println(2);
+                //System.out.println(2);
                 s.supplierStopped(stopped);
-                System.out.println(3);
+                //System.out.println(3);
                 return;
             }
-            System.out.println(4);
+            //System.out.println(4);
             hasRetrievedOneProduct = true;
             int howManyItems = this.rng.nextInt(1, 6);
-            System.out.println(5);
+            //System.out.println(5);
             s.refurbishWithItems(howManyItems, product);
-            System.out.println(6);
+            //System.out.println(6);
         }
     }
 

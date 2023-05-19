@@ -281,10 +281,12 @@ public class RainforestShop {
      */
     public void stopSupplier() {
         // TODO: Provide a correct concurrent implementation!
+        System.out.println("Attempting to stop supplier...");
         currEmptyItemLock.lock();
         try {
+            if (currentEmptyItem.peek() == "@stop!") return;
             currentEmptyItem.add("@stop!");
-            System.out.println("sent");
+            System.out.println("@stop!");
         } finally {
             currEmptyItemLock.unlock();
         }
@@ -297,6 +299,7 @@ public class RainforestShop {
      */
     public void supplierStopped(AtomicBoolean stopped) {
         // TODO: Provide a correct concurrent implementation!
+        System.out.println("Stopping supplier thread");
         currEmptyItemLock.lock();
         try {
             supplierStopped = true;
@@ -304,6 +307,7 @@ public class RainforestShop {
         } finally {
             currEmptyItemLock.unlock();
         }
+        System.out.println("Supplier thread has been stopped");
     }
 
     /**
@@ -316,19 +320,39 @@ public class RainforestShop {
     public String getNextMissingItem() {
         // TODO: Provide a correct concurrent implementation!
         String out;
+
+        // acquire lock to access the queue
         currEmptyItemLock.lock();
         try {
             supplierStopped = false;
+
+            // while queue is empty, let supplier thread sleep so client can
+            // run basketproduct method and update queue if necessary
             while (currentEmptyItem.isEmpty()) {
-                //System.out.println("empty");
+                System.out.println("Queue is currently empty");
+                try {
+                    // unlock lock to let access to write into the queue
+                    currEmptyItemLock.unlock();
+                    // make supplier thread sleep for a very brief moment
+                    System.out.println("Make supplier thread sleep");
+                    Thread.sleep(100);
+                    System.out.println("Supplier thread awakes");
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    // once awake, supplier thread acquires lock again
+                    currEmptyItemLock.lock();
+                }
             }
+
+            System.out.println("Queue contains item to be refurbished");
+            // get value from the queue
             out = currentEmptyItem.remove();
-            //if (currentEmptyItem.size() == 1) stopSupplier();
         } finally {
+            // unlock lock once supplier thread has gotten the item to refurbish
             currEmptyItemLock.unlock();
         }
         return out;
-        //return currentEmptyItem.remove();
     }
 
 

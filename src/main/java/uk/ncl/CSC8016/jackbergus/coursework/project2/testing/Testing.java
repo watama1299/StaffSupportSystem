@@ -740,6 +740,13 @@ public class Testing {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+            //System.out.println(supplier1.isStopped());
+            while (!supplier1.isStopped()) {
+                //System.out.println("A");
+                s.stopSupplier();
+                //System.out.println("B");
+            }
+            //System.out.println(supplier1.isStopped());
         }
 
 
@@ -769,6 +776,7 @@ public class Testing {
             first_test.add(new Message(true, "GOOD (2): Supplier triggered if given product was empty"));
 
             if (!supplier1.isStopped() && supplier1.hasAProductBeenProduced()) s.stopSupplier();
+            while (!supplier1.isStopped()) {}
         }
 
 
@@ -809,6 +817,7 @@ public class Testing {
 
 
             if (!supplier1.isStopped() && supplier1.hasAProductBeenProduced()) s.stopSupplier();
+            while (!supplier1.isStopped()) {}
         }
 
         return first_test;
@@ -1070,7 +1079,7 @@ public class Testing {
             RainforestShop s = new RainforestShop(ofUserNames, m, isGlobalLock);
 
             // make 1 thread of client lifecycle
-            ClientLifecycle client1 = new ClientLifecycle("bogusA", s, 1, 0, 100, 1);
+            ClientLifecycle client1 = new ClientLifecycle("bogus", s, 1, 0, 100, 1);
 
             // make 1 thread of supplier lifecycle
             SupplierLifecycle supplier1 = new SupplierLifecycle(s);
@@ -1086,9 +1095,11 @@ public class Testing {
             while (!supplier1.hasAProductBeenProduced()) {
                 //first_test.add(new Message(false, "BAD (2): Error"));
             }
-            first_test.add(new Message(true, "GOOD (2): Supplier triggered if given product was empty"));
 
             if (!supplier1.isStopped() && supplier1.hasAProductBeenProduced()) s.stopSupplier();
+
+            while (!supplier1.isStopped()) {}
+            first_test.add(new Message(true, "GOOD (1): Supplier triggered if given product was empty"));
         }
         return first_test;
     };

@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="599c20b3-89b2-41c4-82f3-35ccac701927" name="Changes" comment="Progress update 17/05/2023 12:37PM">
+    <list default="true" id="599c20b3-89b2-41c4-82f3-35ccac701927" name="Changes" comment="Progress update 18/05/2023 14:40PM">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/RainforestShop.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/RainforestShop.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/SupplierLifecycle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/SupplierLifecycle.java" afterDir="false" />
@@ -125,7 +125,14 @@
       <option name="project" value="LOCAL" />
       <updated>1684323447447</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Progress update 18/05/2023 14:40PM">
+      <created>1684417262977</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1684417262977</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -145,6 +152,7 @@
     <MESSAGE value="Progress update 15/05/2023" />
     <MESSAGE value="Progress update 16/05/2023 12:36PM" />
     <MESSAGE value="Progress update 17/05/2023 12:37PM" />
-    <option name="LAST_COMMIT_MESSAGE" value="Progress update 17/05/2023 12:37PM" />
+    <MESSAGE value="Progress update 18/05/2023 14:40PM" />
+    <option name="LAST_COMMIT_MESSAGE" value="Progress update 18/05/2023 14:40PM" />
   </component>
 </project>
