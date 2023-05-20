@@ -50,7 +50,7 @@ public class ClientLifecycle implements Runnable {
 
     @Override
     public void run() {
-        //System.out.println(Thread.currentThread().getName());
+        //System.out.println(Thread.currentThread().getName() + ": ClientLifecycle");
         l = null;
         double nextAfter = Math.nextUp(1.0);
         if (s != null) {

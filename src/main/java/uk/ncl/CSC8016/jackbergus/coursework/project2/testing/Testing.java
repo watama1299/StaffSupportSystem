@@ -741,9 +741,10 @@ public class Testing {
                 throw new RuntimeException(e);
             }
             //System.out.println(supplier1.isStopped());
+            s.stopSupplier();
             while (!supplier1.isStopped()) {
                 //System.out.println("A");
-                s.stopSupplier();
+                //s.stopSupplier();
                 //System.out.println("B");
             }
             //System.out.println(supplier1.isStopped());
@@ -819,6 +820,7 @@ public class Testing {
             if (!supplier1.isStopped() && supplier1.hasAProductBeenProduced()) s.stopSupplier();
             while (!supplier1.isStopped()) {}
         }
+
 
         return first_test;
     };
@@ -1129,8 +1131,6 @@ public class Testing {
         if (args.length > 0) {
             isGlobal = args[0].equals("global");
         }
-        System.out.println("Num of active threads: " + Thread.activeCount());
-        Set<Thread> initThread = Thread.getAllStackTraces().keySet();
 
         System.out.println("I. Single Threaded Correctness");
         System.out.println("==============================");
@@ -1162,6 +1162,9 @@ public class Testing {
         FunctionScoring(scoring);
         scoring.clear();
 
+        System.out.println("\nNum of active threads: " + Thread.activeCount());
+        Set<Thread> initThread = Thread.getAllStackTraces().keySet();
+
         System.out.println("");
         System.out.println("II. Multi-Threaded Correctness");
         System.out.println("==============================");
@@ -1191,7 +1194,7 @@ public class Testing {
         System.out.println("Num of active threads: " + Thread.activeCount());
         Set<Thread> endThread = Thread.getAllStackTraces().keySet();
         endThread.removeAll(initThread);
-        System.out.println(endThread);
+        System.out.println("Threads that have been created but not stopped: " + endThread);
     }
 
     public static double sumUpOk(Collection<Message> msg) {

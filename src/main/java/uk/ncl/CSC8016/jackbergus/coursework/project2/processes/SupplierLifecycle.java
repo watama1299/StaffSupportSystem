@@ -29,7 +29,7 @@ public class SupplierLifecycle implements Runnable {
     @Override
     public void run() {
         while (true) {
-            System.out.println(Thread.currentThread().getName());
+            //System.out.println(Thread.currentThread().getName() + ": SupplierLifecycle");
             //System.out.println(0);
             String product = s.getNextMissingItem();
             //System.out.println(1);

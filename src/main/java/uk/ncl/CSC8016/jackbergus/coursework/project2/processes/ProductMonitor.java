@@ -16,10 +16,36 @@ public class ProductMonitor {
     Queue<Item> available;
     Queue<Item> withdrawn;
 
-
+    /**
+     * Monitor implementation using ReentrantLock
+     */
     ReentrantLock monitor;
-    Condition readOk, writeOk;
-    private int numReader, numWriter, waitingWriter;
+
+    /**
+     * Condition to keep track of the ability for threads to read into the queues
+     */
+    Condition readOk;
+
+    /**
+     * Condition to keep track of the ability for threads to write into the queues
+     */
+    Condition writeOk;
+
+    /**
+     * Counter to keep track of the number of readers accessing the queues
+     */
+    private int numReader;
+
+    /**
+     * Counter to keep track of the number of writers accessing the queues
+     */
+    private int numWriter;
+
+    /**
+     * Counter to keep track of the number of writers waiting for access to the queues
+     */
+    private int waitingWriter;
+
 
 
     /**
@@ -125,24 +151,31 @@ public class ProductMonitor {
      * @param cls
      */
     public void removeItemsFromUnavailability(Collection<Item> cls) {
+        // acquire exclusive lock to access and write to the queue
         xLock();
+
+        // critical section
         for (Item x : cls) {
             if (withdrawn.remove(x))
                 available.add(x);
         }
+
+        // release exclusive lock to give others access to both queue
         xUnlock();
     }
 
     /**
      * Put item from shelf to basket
      *
-     * WILL NEED READ WRITE LOCK
-     *
      * @return
      */
     public Optional<Item> getAvailableItem() {
         Optional<Item> o = Optional.empty();
+
+        // acquire exclusive lock to access and write to the queue
         xLock();
+
+        // critical section
         if (!available.isEmpty()) {
             var obj = available.remove();
             if (obj != null) {
@@ -150,6 +183,8 @@ public class ProductMonitor {
                 withdrawn.add(o.get());
             }
         }
+
+        // release exclusive lock to give others access to both queue
         xUnlock();
         return o;
     }
@@ -157,18 +192,22 @@ public class ProductMonitor {
     /**
      * Put item from basket to shelf
      *
-     * WILL NEED WRITE LOCK
-     *
      * @param u
      * @return
      */
     public boolean doShelf(Item u) {
         boolean result = false;
+
+        // acquire exclusive lock to access and write to the queue
         xLock();
+
+        // critical section
         if (withdrawn.remove(u)) {
             available.add(u);
             result = true;
         }
+
+        // release exclusive lock to give others access to both queue
         xUnlock();
         return result;
     }
@@ -176,14 +215,17 @@ public class ProductMonitor {
     /**
      * List all available products left from available queue
      *
-     * WILL NEED READ LOCK
-     *
      * @return
      */
     public Set<String> getAvailableItems() {
+        // acquire shared lock to access and read to the queue
         sLock();
+
+        // critical section
         Set<String> s;
         s = available.stream().map(x -> x.productName).collect(Collectors.toSet());
+
+        // release shared lock once done with reading
         sUnlock();
         return s;
     }
@@ -194,8 +236,13 @@ public class ProductMonitor {
      * @param x
      */
     public void addAvailableProduct(Item x) {
+        // acquire exclusive lock to access and write to the queue
         xLock();
+
+        // critical section
         available.add(x);
+
+        // release exclusive lock to give others access to both queue
         xUnlock();
     }
 
@@ -213,7 +260,11 @@ public class ProductMonitor {
                                  List<Item> currentlyPurchasable,
                                  List<Item> currentlyUnavailable) {
         double total_cost = 0.0;
+
+        // acquire exclusive lock to access and write to the queue
         xLock();
+
+        // critical section
         for (var x : toIterate) {
             if (withdrawn.contains(x)) {
                 currentlyPurchasable.add(x);
@@ -222,6 +273,8 @@ public class ProductMonitor {
                 currentlyUnavailable.add(x);
             }
         }
+
+        // release exclusive lock to give others access to both queue
         xUnlock();
         return total_cost;
     }
@@ -232,12 +285,17 @@ public class ProductMonitor {
      * @param toIterate
      */
     public void makeAvailable(List<Item> toIterate) {
+        // acquire exclusive lock to access and write to the queue
         xLock();
+
+        // critical section
         for (var x : toIterate) {
             if (withdrawn.remove(x)) {
                 available.add(x);
             }
         }
+
+        // release exclusive lock to give others access to both queue
         xUnlock();
     }
 
@@ -249,12 +307,18 @@ public class ProductMonitor {
      */
     public boolean completelyRemove(List<Item> toIterate) {
         boolean allEmpty;
+
+        // acquire exclusive lock to access and write to the queue
         xLock();
+
+        // critical section
         for (var x : toIterate) {
             withdrawn.remove(x);
             available.remove(x);
         }
         allEmpty = withdrawn.isEmpty() && available.isEmpty();
+
+        // release exclusive lock to give others access to both queue
         xUnlock();
         return allEmpty;
     }
