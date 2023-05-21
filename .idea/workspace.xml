@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="599c20b3-89b2-41c4-82f3-35ccac701927" name="Changes" comment="Progress update 19/05/2023 13:34PM">
+    <list default="true" id="599c20b3-89b2-41c4-82f3-35ccac701927" name="Changes" comment="Progress update 20/05/2023 17:09PM">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/ClientLifecycle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/ClientLifecycle.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/ProductMonitor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/ProductMonitor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/RainforestShop.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/RainforestShop.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/SupplierLifecycle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/processes/SupplierLifecycle.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/testing/Testing.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/uk/ncl/CSC8016/jackbergus/coursework/project2/testing/Testing.java" afterDir="false" />
@@ -141,7 +140,14 @@
       <option name="project" value="LOCAL" />
       <updated>1684499655890</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Progress update 20/05/2023 17:09PM">
+      <created>1684598979897</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1684598979897</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -163,6 +169,7 @@
     <MESSAGE value="Progress update 17/05/2023 12:37PM" />
     <MESSAGE value="Progress update 18/05/2023 14:40PM" />
     <MESSAGE value="Progress update 19/05/2023 13:34PM" />
-    <option name="LAST_COMMIT_MESSAGE" value="Progress update 19/05/2023 13:34PM" />
+    <MESSAGE value="Progress update 20/05/2023 17:09PM" />
+    <option name="LAST_COMMIT_MESSAGE" value="Progress update 20/05/2023 17:09PM" />
   </component>
 </project>

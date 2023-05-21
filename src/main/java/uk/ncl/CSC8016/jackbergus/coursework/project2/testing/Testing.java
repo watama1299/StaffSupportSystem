@@ -742,11 +742,11 @@ public class Testing {
             }
             //System.out.println(supplier1.isStopped());
             s.stopSupplier();
-            while (!supplier1.isStopped()) {
-                //System.out.println("A");
-                //s.stopSupplier();
-                //System.out.println("B");
-            }
+//            while (!supplier1.isStopped()) {
+//                System.out.println("A");
+//                s.stopSupplier();
+//                System.out.println("B");
+//            }
             //System.out.println(supplier1.isStopped());
         }
 
@@ -1162,7 +1162,7 @@ public class Testing {
         FunctionScoring(scoring);
         scoring.clear();
 
-        System.out.println("\nNum of active threads: " + Thread.activeCount());
+        //System.out.println("\nNum of active threads: " + Thread.activeCount());
         Set<Thread> initThread = Thread.getAllStackTraces().keySet();
 
         System.out.println("");
@@ -1191,10 +1191,10 @@ public class Testing {
 
         System.out.println("");
         System.out.println("[" + StudentId + "] Total Score: " + total_score + "/" + total_max_score + " = " + (total_score/total_max_score));
-        System.out.println("Num of active threads: " + Thread.activeCount());
+        //System.out.println("Num of active threads: " + Thread.activeCount());
         Set<Thread> endThread = Thread.getAllStackTraces().keySet();
         endThread.removeAll(initThread);
-        System.out.println("Threads that have been created but not stopped: " + endThread);
+        System.out.println("Threads that have been created during testing but not stopped:\n" + endThread);
     }
 
     public static double sumUpOk(Collection<Message> msg) {

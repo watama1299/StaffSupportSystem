@@ -58,6 +58,10 @@ public class RainforestShop {
      */
     ReentrantLock currEmptyItemLock;
 
+    /**
+     * Condition used
+     */
+    Condition notEmpty;
 
 
     public boolean isGlobalLock() {
@@ -91,6 +95,9 @@ public class RainforestShop {
 
         // lock for currentEmptyItem
         currEmptyItemLock = new ReentrantLock(true);
+
+        // condition for supplier to trigger
+        notEmpty = currEmptyItemLock.newCondition();
 
         // setting globallock for pessimistic or optimistic transaction
         this.isGlobalLock = isGlobalLock;
@@ -126,6 +133,7 @@ public class RainforestShop {
         }
     }
 
+
     /**
      * Performing an user log-in. To generate a transaction ID, please use the customary Java method
      * 
@@ -139,13 +147,19 @@ public class RainforestShop {
      */
     public Optional<Transaction> login(String username) {
         Optional<Transaction> result = Optional.empty();
+
+        // Before logging in, ensures that the username input is a valid and existing user in the
+        // rainforest shop hashmap
         if (allowed_clients.contains(username)) {
+            // Generate a random userID upon logging in. It will help with the same user
+            // logging in using 2 different transaction instances
             UUID uuid = UUID.randomUUID();
             UUID_to_user.put(uuid, username);
             result = Optional.of(new Transaction(this, username, uuid));
         }
         return result;
     }
+
 
     /**
      * This method should be accessible only to the transaction and not to the public!
@@ -157,7 +171,6 @@ public class RainforestShop {
      */
     boolean logout(Transaction transaction) {
         boolean result = false;
-        // TODO: Implement the remaining part!
 
         // null input check
         if (transaction.getUsername() == null ||
@@ -166,6 +179,8 @@ public class RainforestShop {
 
         // check if transaction UUID is listed in the rainforest shop
         if (!UUID_to_user.containsKey(transaction.getUuid())) return result;
+
+        String user = transaction.getUsername();
 
         // check if user has any item in basket
         if (transaction.getUnmutableBasket().isEmpty()) {
@@ -183,26 +198,26 @@ public class RainforestShop {
             // get access to the ProductMonitor for each item through available_withdrawn_products
             ProductMonitor pm = available_withdrawn_products.get(name);
             // re-shelf the product/item
+            System.out.println("Returning [" + toReturn.productName + ", ID: " + toReturn.id + "] to shelf");
             pm.doShelf(toReturn);
         }
 
         // close transaction once all items have been returned
         transaction.invalidateTransaction();
+        System.out.println(user + " successfully logged out!");
 
         return result;
     }
 
+
     /**
      * Lists all of the items that were not basketed and that are still on the shelf
-     *
-     * WILL NEED READ LOCK
      *
      * @param transaction
      * @return
      */
     List<String> getAvailableItems(Transaction transaction) {
         List<String> ls = Collections.emptyList();
-        // TODO: Implement the remaining part!
 
         // redefine ls because Collections.emptyList() gives an immutable (unchangeable) list
         ls = new ArrayList<>();
@@ -211,19 +226,16 @@ public class RainforestShop {
 
         // check ProductMonitor for each item to see if !available.isEmpty()
         for (Map.Entry<String, ProductMonitor> item : transaction.getSelf().available_withdrawn_products.entrySet()) {
-            //System.out.println("b");
             //if (!item.getValue().available.isEmpty()) ls.add(item.getKey());
             ls.addAll(item.getValue().getAvailableItems());
-            //System.out.println("d");
         }
 
         return ls;
     }
 
+
     /**
      * If a product can be basketed from the shelf, then a specific instance of the product on the shelf is returned
-     *
-     * WILL NEED WRITE LOCK
      *
      * @param transaction   User reference
      * @param name          Product name picked from the shelf
@@ -232,7 +244,6 @@ public class RainforestShop {
     Optional<Item> basketProductByName(Transaction transaction, String name) {
         AtomicReference<Optional<Item>> result = new AtomicReference<>(Optional.empty());
         if (transaction.getSelf() == null || (transaction.getUuid() == null)) return result.get();
-        // TODO: Implement the remaining part!
 
         // check to see if name exists in available_withdrawn_products.keySet()
         if (!transaction.getSelf().available_withdrawn_products.containsKey(name))
@@ -245,11 +256,10 @@ public class RainforestShop {
         return result.get();
     }
 
+
     /**
      * If the current transaction has withdrawn one of the objects from the shelf and put it inside its basket,
      * then the transaction shall be also able to replace the object back where it was (on its shelf)
-     *
-     * WILL NEED WRITE LOCK
      *
      * @param transaction   Transaction that basketed the object
      * @param object        Object to be reshelved
@@ -258,7 +268,6 @@ public class RainforestShop {
     boolean shelfProduct(Transaction transaction, Item object) {
         boolean result = false;
         if (transaction.getSelf() == null || (transaction.getUuid() == null)) return false;
-        // TODO: Implement the remaining part!
 
         // check to see if object exists in current transaction basket
         if (!transaction.getUnmutableBasket().contains(object)) return result;
@@ -275,11 +284,11 @@ public class RainforestShop {
         return result;
     }
 
+
     /**
      * Stops the food supplier by sending a specific message. Please observe that no product shall be named @stop!
      */
     public void stopSupplier() {
-        // TODO: Provide a correct concurrent implementation!
         //System.out.println("Attempting to stop supplier...");
 
         // acquire lock to access queue
@@ -290,6 +299,12 @@ public class RainforestShop {
         try {
             currentEmptyItem.add("@stop!");
             System.out.println("@stop! triggered");
+
+            // Once the @stop! flag has been added to the queue, send a signal to
+            // the supplier thread to wake up from waiting and continue its process.
+            // This is especially useful when there is no items to be refurbished but
+            // the supplier thread needs to be ended regardless.
+            notEmpty.signal();
         } finally {
             // release lock to allow others access to queue
             currEmptyItemLock.unlock();
@@ -299,10 +314,10 @@ public class RainforestShop {
     /**
      * The supplier acknowledges that it was stopped, and updates its internal state.
      * The monitor also receives confirmation
+     *
      * @param stopped   Boolean variable from the supplier
      */
     public void supplierStopped(AtomicBoolean stopped) {
-        // TODO: Provide a correct concurrent implementation!
         System.out.println("Stopping supplier thread");
 
         // acquire lock to access the queue
@@ -322,21 +337,26 @@ public class RainforestShop {
 
     /**
      * The supplier invokes this method when it needs to know that a new product shall be made ready available.
-     *
+     * <p>
      * This method should be blocking (if currentEmptyItem is empty, then this should wait until currentEmptyItem
      * contains at least one element and, in that occasion, then returns the first element being available)
-     *
-     * The supplier that invokes this method will first block of any other threads trying to access it by acquiring
-     * the lock. Then it will check whether the queue is empty or not. If it is, then the thread will release the
-     * lock and sleep to allow other threads to access the queue, namely the client thread. Once awake, it will
-     * first attempt to acquire the lock again and then performs the check again to see if the queue is empty or not.
-     * Once the queue is not empty, it will remove a String from the queue. And finally once done, it will release
-     * the lock again.
+     * <p>
+     * TODO: Comment/Explanation
+     * <p>
+     * For the blocking implementation, the await signal pair has been used. When the Supplier thread enters
+     * the while loop to check if the queue is empty or not, while it's empty it the await condition will be
+     * called which will let the thread wait until a signal is called. Doing this will also implicitly release
+     * the lock that the Supplier thread had while accessing the queue so that the Client thread can obtain
+     * the lock to be able to add the items to be refurbished to the queue as and when necessary. Releasing
+     * the lock will also allow the RainforestShop to add a @stop! to the queue.
+     * <p>
+     * Once the queue is filled by either the basketCheckout or stopSupplier methods, a signal will be called
+     * for the condition allowing the Supplier thread to run and continue its process. It will break out of
+     * its while loop and return the String object that was obtained from the queue.
      *
      * @return      the name of the missing item that will need to be refurbished
      */
     public String getNextMissingItem() {
-        // TODO: Provide a correct concurrent implementation!
         // initialise output String object
         String out;
 
@@ -346,30 +366,36 @@ public class RainforestShop {
         try {
             supplierStopped = false;
 
-            // while queue is empty, let supplier thread sleep so the client can run the basketproduct method and
-            // update queue if necessary
             while (currentEmptyItem.isEmpty()) {
                 System.out.println("\ncurrentEmptyItem queue is currently empty");
-                try {
-                    // unlock lock to let access to write into the queue
-                    currEmptyItemLock.unlock();
-                    // make supplier thread sleep for a very brief moment
-                    System.out.println("Make supplier thread sleep");
-                    Thread.sleep(1);
-                    System.out.println("Supplier thread awakes");
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                } finally {
-                    // once awake, supplier thread acquires lock again
-                    currEmptyItemLock.lock();
-                }
+//                // Implementation below uses sleep instead of awake and signal pair
+//                try {
+//                    // unlock lock to let access to write into the queue
+//                    currEmptyItemLock.unlock();
+//
+//                    // make supplier thread sleep for a very brief moment
+//                    System.out.println("Make supplier thread sleep");
+//                    Thread.sleep(1);
+//                    System.out.println("Supplier thread awakes");
+//                } catch (InterruptedException e) {
+//                    throw new RuntimeException(e);
+//                } finally {
+//                    // once awake, supplier thread acquires lock again
+//                    currEmptyItemLock.lock();
+//                }
+
+                notEmpty.await();
+                System.out.println("Found item to refurbish");
             }
 
-            //
+            // If the next String on the queue is an item, then display the item to be refurbished
             if (currentEmptyItem.peek() != "@stop!" && currentEmptyItem.peek() != null)
-                System.out.println("Item to be refurbished: " + currentEmptyItem.peek());
+                System.out.println("Item to be refurbished: [" + currentEmptyItem.peek() + "]");
+
             // get value from the queue
             out = currentEmptyItem.remove();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         } finally {
             // release lock once supplier thread has gotten the item to refurbish
             currEmptyItemLock.unlock();
@@ -380,7 +406,8 @@ public class RainforestShop {
 
 
     /**
-     * This method is invoked by the Supplier to refurbrish the shop of n products of a given time (current item)
+     * This method is invoked by the Supplier to refurbish the shop of n products of a given time (current item)
+     *
      * @param n                 Number of elements to be placed
      * @param currentItem       Type of elements to be placed
      */
@@ -396,7 +423,12 @@ public class RainforestShop {
     }
 
     /**
-     * This operation purchases all the elements available on the basket
+     * This operation purchases all the elements available on the basket.
+     * <p>
+     * A small code snippet has been added at the end of the checkout algorithm. The condition signal has been
+     * added to send a signal to the waiting Supplier thread that an item has been added to the queue that
+     * needs to be refurbished.
+     *
      * @param transaction               Transaction containing the current withdrawn elements from the shelf (and therefore basketed)
      * @param total_available_money     How much money can the client spend at maximum
      * @return
@@ -413,7 +445,7 @@ public class RainforestShop {
             // get list of items from user's basket
             var b = transaction.getUnmutableBasket();
 
-
+            // initialise some values
             double total_cost = (0.0);
             List<Item> currentlyPurchasable = new ArrayList<>();
             List<Item> currentlyUnavailable = new ArrayList<>();
@@ -428,7 +460,7 @@ public class RainforestShop {
                 total_cost += available_withdrawn_products.get(k).updatePurchase(productWithCost.get(k), v, currentlyPurchasable, currentlyUnavailable);
             }
 
-            // if the user doesn't have enough money to buy all the items
+            // if the user doesn't have enough money to buy all the items:
             // 1) make all the items in the user's basket become available again for all users
             // 2) clear out the temporary arraylists
             if ((total_cost > total_available_money)) {
@@ -442,7 +474,7 @@ public class RainforestShop {
                 total_cost = (0.0);
             }
 
-            // if the user has enough money to buy all the items
+            // if the user has enough money to buy all the items:
             // 1) complete the purchase and remove the items
             // 2) if a product has been completely purchased off the shelf, put product name to Set s
             // 3) put all product names in s into currentEmptyItem
@@ -455,7 +487,19 @@ public class RainforestShop {
                     if (available_withdrawn_products.get(k).completelyRemove(v))
                         s.add(k);
                 }
-                currentEmptyItem.addAll(s);
+
+                // acquire lock to be able to access the queue
+                currEmptyItemLock.lock();
+                try {
+                    // critical section
+                    currentEmptyItem.addAll(s);
+
+                    // send signal to the condition to awaken the Supplier thread waiting
+                    notEmpty.signal();
+                } finally {
+                    // release lock once process is done
+                    currEmptyItemLock.unlock();
+                }
             }
 
             // saves the summary of the checkout into result
