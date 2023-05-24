@@ -11,9 +11,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
+
+/**
+ *
+ */
 public class RainforestShop {
 
     /// For correctly implementing the server, pelase consider that
@@ -56,10 +61,10 @@ public class RainforestShop {
     /**
      * Reentrant lock for volatile queue currentEmptyItem
      */
-    ReentrantLock currEmptyItemLock;
+    Lock currEmptyItemLock;
 
     /**
-     * Condition used
+     * Condition used to let Supplier thread wait and run
      */
     Condition notEmpty;
 
@@ -157,6 +162,10 @@ public class RainforestShop {
             UUID_to_user.put(uuid, username);
             result = Optional.of(new Transaction(this, username, uuid));
         }
+
+        if (result.isPresent()) {
+            System.out.println(result.get().getUsername() + " has successfully logged in!");
+        }
         return result;
     }
 
@@ -166,8 +175,8 @@ public class RainforestShop {
      * Logs out the client iff. there was a transaction that was started with a given UUID and that was associated to
      * a given user
      *
-     * @param transaction
-     * @return false if the transaction is null or whether that was not created by the system
+     * @param transaction   the transaction associated between the user and the rainforestshop
+     * @return              false if the transaction is null or whether that was not created by the system
      */
     boolean logout(Transaction transaction) {
         boolean result = false;
@@ -213,8 +222,8 @@ public class RainforestShop {
     /**
      * Lists all of the items that were not basketed and that are still on the shelf
      *
-     * @param transaction
-     * @return
+     * @param transaction   the transaction associated between the user and the rainforestshop
+     * @return              a list of product names which are still available to basket
      */
     List<String> getAvailableItems(Transaction transaction) {
         List<String> ls = Collections.emptyList();
@@ -224,12 +233,13 @@ public class RainforestShop {
         if (!this.equals(transaction.getSelf())) return ls;
         //System.out.println("a");
 
-        // check ProductMonitor for each item to see if !available.isEmpty()
+        // check each item's ProductMonitor to see if !available.isEmpty()
         for (Map.Entry<String, ProductMonitor> item : transaction.getSelf().available_withdrawn_products.entrySet()) {
             //if (!item.getValue().available.isEmpty()) ls.add(item.getKey());
             ls.addAll(item.getValue().getAvailableItems());
         }
 
+        System.out.println("Items that are still available:\n" + ls + "\n");
         return ls;
     }
 
@@ -239,7 +249,7 @@ public class RainforestShop {
      *
      * @param transaction   User reference
      * @param name          Product name picked from the shelf
-     * @return  Whether the item to be basketed is available or not
+     * @return              Whether the item to be basketed is available or not
      */
     Optional<Item> basketProductByName(Transaction transaction, String name) {
         AtomicReference<Optional<Item>> result = new AtomicReference<>(Optional.empty());
@@ -253,6 +263,9 @@ public class RainforestShop {
         ProductMonitor pm = transaction.getSelf().available_withdrawn_products.get(name);
         result.set(pm.getAvailableItem());
 
+        if (result.get().isPresent()) {
+            System.out.println(transaction.getUsername() + " has put [" + result.get().get().productName + "] in their basket");
+        }
         return result.get();
     }
 
@@ -263,7 +276,8 @@ public class RainforestShop {
      *
      * @param transaction   Transaction that basketed the object
      * @param object        Object to be reshelved
-     * @return  Returns true if the object existed before and if that was basketed by the current thread, returns false otherwise
+     * @return              Returns true if the object existed before and if that was basketed by the current
+     *                      thread, returns false otherwise
      */
     boolean shelfProduct(Transaction transaction, Item object) {
         boolean result = false;
@@ -281,6 +295,10 @@ public class RainforestShop {
         ProductMonitor pm = transaction.getSelf().available_withdrawn_products.get(objectName);
         result = pm.doShelf(object);
 
+        if (result) {
+            System.out.println("[" + objectName + ", ID: " + object.id + "] has been re-shelved");
+        }
+
         return result;
     }
 
@@ -289,7 +307,7 @@ public class RainforestShop {
      * Stops the food supplier by sending a specific message. Please observe that no product shall be named @stop!
      */
     public void stopSupplier() {
-        //System.out.println("Attempting to stop supplier...");
+        System.out.println("\nAttempting to stop supplier...");
 
         // acquire lock to access queue
         // ensures no other thread will access the queue whilst current thread is accessing it
@@ -318,7 +336,7 @@ public class RainforestShop {
      * @param stopped   Boolean variable from the supplier
      */
     public void supplierStopped(AtomicBoolean stopped) {
-        System.out.println("Stopping supplier thread");
+        System.out.println("\nStopping supplier thread...");
 
         // acquire lock to access the queue
         // ensures no other thread will access the queue whilst current thread is accessing it
@@ -341,7 +359,7 @@ public class RainforestShop {
      * This method should be blocking (if currentEmptyItem is empty, then this should wait until currentEmptyItem
      * contains at least one element and, in that occasion, then returns the first element being available)
      * <p>
-     * TODO: Comment/Explanation
+     * *******EXPLANATION OF BLOCKING IMPLEMENTATION:*******
      * <p>
      * For the blocking implementation, the await signal pair has been used. When the Supplier thread enters
      * the while loop to check if the queue is empty or not, while it's empty it the await condition will be
@@ -385,7 +403,7 @@ public class RainforestShop {
 //                }
 
                 notEmpty.await();
-                System.out.println("Found item to refurbish");
+                System.out.println("Found item to be refurbished!");
             }
 
             // If the next String on the queue is an item, then display the item to be refurbished
@@ -424,6 +442,8 @@ public class RainforestShop {
 
     /**
      * This operation purchases all the elements available on the basket.
+     * <p>
+     * *******EXPLANATION OF ADDITIONAL CODE:*******
      * <p>
      * A small code snippet has been added at the end of the checkout algorithm. The condition signal has been
      * added to send a signal to the waiting Supplier thread that an item has been added to the queue that
@@ -488,6 +508,7 @@ public class RainforestShop {
                         s.add(k);
                 }
 
+                // ADDITIONAL CODE TO SIGNAL SUPPLIER THREAD
                 // acquire lock to be able to access the queue
                 currEmptyItemLock.lock();
                 try {
